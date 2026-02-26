@@ -23,7 +23,13 @@ RUN mvn clean package
 # Stage -2 Run the application
 # ===========================================================
 
-FROM openjdk:11-jre-slim
+FROM ubuntu:20.04
+
+# Install Java runtime dependencies
+RUN apt-get update && \
+    apt-get install -y openjdk-11-jre-headless && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Create the working directory
 WORKDIR /app
