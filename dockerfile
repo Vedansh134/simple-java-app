@@ -2,7 +2,7 @@
 # Stage -1 Build the application
 # ===========================================================
 
-FROM maven:3.9.4-openjdk-11 AS builder
+FROM maven:3.8.4-openjdk-11 AS builder
 
 # Create working directory
 WORKDIR /app
