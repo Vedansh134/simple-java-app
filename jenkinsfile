@@ -1,0 +1,68 @@
+pipeline{
+    agent any
+
+    // Define global tools
+    tools {
+        maven "maven"
+    }
+
+    // Define global environment variables and credentials
+    environment {
+        // Docker
+        DOCKER_IMAGE = "kvedansh/node-crud-app"
+        DOCKER_TAG = "${BUILD_NUMBER}"
+    }
+
+    stages {
+        stage("Git : Checkout Code") {
+           steps{
+                echo "Clone the reposititory from github..."
+                git url: "https://github.com/Vedansh134/simple-java-app.git", branch: "main"
+                echo "cloning successfully"
+           }
+        }
+        stage("Build : Maven Build") {
+            steps{
+                echo "Build the code using maven"
+                sh "mvn clean package -DskipTests"
+            }
+        }
+        stage("Build : Docker Image") {
+            steps{
+                echo "Build the code using docker and tagged the image"
+                sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
+                sh "docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest"
+            }
+        }
+        stage("Push : Docker Image to Docker Hub") {
+            steps{
+                echo "Pushing Docker Image to Docker Hub..."
+                withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
+                    // docker login using credentials
+                    sh "echo ${DOCKERHUB_PASSWORD} | docker login -u ${DOCKERHUB_USERNAME} --password-stdin"
+
+                    // list all docker images
+                    sh "docker images"
+
+                    // push the image to docker hub
+                    sh "docker push ${DOCKER_IMAGE}:${DOCKER_TAG}"
+                    sh "docker push ${DOCKER_IMAGE}:latest"
+
+                    echo "Docker Image pushed successfully to Docker Hub"
+                }
+            }
+        }
+    }
+    post {
+        always {
+            echo "pipeline execution completed"
+
+        }
+        success {
+            echo "🎉 Pipeline SUCCESSFUL!"
+        }
+        failure {
+            echo "❌ Pipeline FAILED!"
+        }
+    }
+}
